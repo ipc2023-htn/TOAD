@@ -51,7 +51,25 @@ From: ubuntu:22.04
 	cd 03-FD-TOAD-Heuristic
 	./build.py
 	mv builds/release/bin/downward ..
-	
+	cd ..
+
+	cd 04-verification
+	mkdir bin
+	cd bin
+	cmake ..
+	make
+	mv htnPrefixEncoding ../../verificationAsPlanning
+	cd ../..
+
+	cd 05-panda/src
+	mkdir bin
+	cd bin
+	cmake ..
+	make
+	mv pandaPIengine ../../..
+	cd ..
+
+
 	## remove files not needed to execute the planner
 
 %runscript
