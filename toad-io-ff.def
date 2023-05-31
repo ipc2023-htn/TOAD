@@ -92,7 +92,7 @@ From: ubuntu:22.04
      exit 103
     fi
 
-    /planner/downward -evaluator "hff=ff()" --search "lazy_greedy([hff], preferred=[hff])" < problem.sas
+    /planner/downward --evaluator "hff=ff()" --search "lazy_greedy([hff], preferred=[hff])" < problem.sas
 
     /planner/pandaPIparser -c verify.log $3
 
