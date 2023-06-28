@@ -1,7 +1,6 @@
 #!/bin/bash
 
-pfile=$(find . -type f -iname "*.psas")
-/planner/verificationAsPlanning verify-all "$pfile" sas_plan >> verify.log
+/planner/verificationAsPlanning verify-all temp.ground sas_plan >> verify.log
 if [ -f sas_plan.verify ]; then # verifier sometimes shows unsolvability by reachability analysis
   /planner/pandaPIengine -g none --heuristic="rc2(add)" sas_plan.verify >> verify.log
   #if ! grep -q "\- Status\: Solved" verify.log; then
