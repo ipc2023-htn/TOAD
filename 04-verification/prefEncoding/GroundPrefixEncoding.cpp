@@ -144,7 +144,7 @@ void GroundPrefixEncoding::prefixEncoding(Model *htn, string sasPlan, encodingTy
     for (int t : tdReachableT) {
         if (t < htn->numActions) {
             if ((encode != Verification) || (distPrefActions.find(t) == distPrefActions.end())) {
-                // for prefixEncoding, there do not need to be copies of the prefix actions, for repair and pgr, there must be
+                // for verification, there do not need to be copies of the prefix actions, for repair and pgr, there must be
                 typeTactions.insert(t);
             }
         } else  {
@@ -187,7 +187,7 @@ void GroundPrefixEncoding::prefixEncoding(Model *htn, string sasPlan, encodingTy
     //
     string outFileName;
     if (encode == Verification) {
-        outFileName = sasPlan.append(".prefixEncoding");
+        outFileName = sasPlan.append(".verify");
     }  else if ((encode == PGRfo) || (encode == PGRpo)) {
         outFileName = sasPlan.append(filePostPix + ".pgr");
     }  else {
@@ -271,11 +271,15 @@ void GroundPrefixEncoding::prefixEncoding(Model *htn, string sasPlan, encodingTy
     fOut << last - 1 << " -1" << endl;
 
     fOut << endl << ";; tasks (primitive and abstract)" << endl;
-    //int numTasks = tdReachableT.size() + prefix.size();
-    int numTasks = tdReachableT.size() + distPrefActions.size() + prefix.size();
-    // - reachable contains all tasks, i.e., the original actions
-    // - for each distinct task in the prefix, there will be an additional abstract task
-    // - for each task in the prefix, there will be an additional primitive action
+    int numTasks = -1;
+    if (enc == Verification) {
+         numTasks = tdReachableT.size() + prefix.size();
+    } else {
+        numTasks = tdReachableT.size() + distPrefActions.size() + prefix.size();
+        // - reachable contains all tasks, i.e., the original actions
+        // - for each distinct task in the prefix, there will be an additional abstract task
+        // - for each task in the prefix, there will be an additional primitive action
+    }
     if (writeDummy) {
         numTasks++;
     }
@@ -541,31 +545,30 @@ bool GroundPrefixEncoding::readSolution(const string &filename, vector<string> &
     string line;
     int linesadded = 0;
     bool breakLoop = false;
-    if (stopafter > 0) {
-        while (getline(fIn, line)) {
-            int i = line.find(")(");
-            while (i != std::string::npos) { // split lines with multiple actions in it
-                string action = line.substr(0, i + 1);
-                line = line.substr(i + 1, line.length());
 
-                if (action.find("]") == std::string::npos) {
-                    cleanStr(action);
-                }
-                plan_out.push_back(action);
-                if (plan_out.size() >= stopafter) {
-                    breakLoop = true;
-                    break;
-                }
-                i = line.find(")(");
+    while (getline(fIn, line)) {
+        int i = line.find(")(");
+        while (i != std::string::npos) { // split lines with multiple actions in it
+            string action = line.substr(0, i + 1);
+            line = line.substr(i + 1, line.length());
+
+            if (action.find("]") == std::string::npos) {
+                cleanStr(action);
             }
-            if (breakLoop) {
+            plan_out.push_back(action);
+            if ((stopafter >= 0) && (plan_out.size() >= stopafter)) {
+                breakLoop = true;
                 break;
             }
-            cleanStr(line);
-            plan_out.push_back(line);
-            if ((stopafter >= 0) && (++linesadded == stopafter)) {
-                break;
-            }
+            i = line.find(")(");
+        }
+        if (breakLoop) {
+            break;
+        }
+        cleanStr(line);
+        plan_out.push_back(line);
+        if ((stopafter >= 0) && (++linesadded == stopafter)) {
+            break;
         }
     }
     bool fileEnd = fIn.eof();
@@ -580,13 +583,15 @@ bool GroundPrefixEncoding::readSolution(const string &filename, vector<string> &
 
 void GroundPrefixEncoding::cleanStr(string &action) const {
     int pos = action.find(" ");
-    action.replace(pos, 1, "[");
-    pos = action.length() - 1;
-    action.insert(pos, 1, ']');
-    pos = action.find(" ");
-    while (pos != std::string::npos) {
-        action.replace(pos, 1, ",");
+    if (pos != std::string::npos) {
+        action.replace(pos, 1, "[");
+        pos = action.length() - 1;
+        action.insert(pos, 1, ']');
         pos = action.find(" ");
+        while (pos != std::string::npos) {
+            action.replace(pos, 1, ",");
+            pos = action.find(" ");
+        }
     }
 }
 

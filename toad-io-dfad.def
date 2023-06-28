@@ -90,15 +90,15 @@ From: ubuntu:22.04
 		exit 101
 	fi
 
-	/planner/pandaPIgrounder -q -i temp.parsed "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas"
-	# /planner/pandaPIgrounder -q -DE temp.parsed "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas"
+	/planner/pandaPIgrounder -q -i temp.parsed temp.ground
+	# /planner/pandaPIgrounder -q -DE temp.parsed temp.ground
 	rm temp.parsed
-	if [ ! -f "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" ]; then
+	if [ ! -f temp.ground ]; then
 		echo "Grounding failed."
 		exit 102
 	fi
 
-	/planner/toad "BU-IO" "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" ht ipt=15
+	/planner/toad "BU-IO" temp.ground ht ipt=15
 
     status=$?
     if [ $status -ne 0 ]; then
